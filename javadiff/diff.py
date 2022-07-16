@@ -230,11 +230,6 @@ def get_bugs_data(gitPath, jira_project_name, jira_url, json_out, number_of_bugs
 
 
 if __name__ == "__main__":
-    c = get_changed_methods(r"C:\Temp\commons-lang",
-                              git.Repo(r"C:\Temp\commons-lang").commit("26ed080b4689a2fd92221416ebeaf6734a962347"))
-    for c1 in c:
-        print(c1)
-        print("\n\t".join(map(repr, c1.get_changed_lines())))
-    assert len(args) == 6, "USAGE: diff.py git_path jira_project_name jira_url json_method_file json_bugs_file"
-    get_bugs_data(args[1], args[2], args[3], args[5])
-    get_methods_descriptions(args[1], args[4])
+    bugs = list(set(map(lambda x: x.method_name_parameters.replace(',', ';'),
+                        get_modified_exists_functions(r"C:\Temp\commons-collections"))))
+    pass

@@ -10,7 +10,7 @@ import pandas as pd
 from collections import Counter
 from functools import reduce
 from subprocess import run
-
+import networkx as nx
 try:
     from .commented_code_detector import CommentFilter
     from .methodData import MethodData, SourceLine
@@ -71,6 +71,7 @@ class SourceFile(object):
             self.methods, self.used_lines = self.get_methods_by_javalang(tokens, parsed_data,
                                                                          analyze_source_lines=analyze_source_lines)
             self.used_changed_lines = set(self.changed_indices).intersection(self.used_lines)
+            self.ast_graph = self.make_ast_graph(parsed_data, self.used_changed_lines)
             if analyze_source_lines:
                 self.decls = SourceLine.get_decles_empty_dict()
                 for k in self.decls:
@@ -246,3 +247,25 @@ class SourceFile(object):
         d.update(self.decls)
         d.update(self.halstead)
         return d
+
+    def make_ast_graph(self, tree, used_changed_lines):
+        g = nx.DiGraph()
+        for path, node in tree:
+            attrs = {
+                k: v for k, v in node.__dict__.items()
+                if not isinstance(v, (javalang.ast.Node, list)) and
+                   v is not None and
+                   len(str(v)) > 0
+            }
+            attrs['changed'] = None
+            if '_position' in attrs:
+                attrs['changed'] = attrs['_position'].line in used_changed_lines
+            attrs['type'] = node.__class__.__name__
+            g.add_node(id(node), **attrs)
+            if len(path) > 0:
+                parents = path[-1]
+                if not isinstance(path[-1], list):
+                    parents = [parents]
+                for p in parents:
+                    g.add_edge(id(p), id(node))
+        return g

@@ -5,7 +5,7 @@ import tempfile
 import os
 from subprocess import run
 from collections import OrderedDict
-
+import numpy as np
 
 class Convert():
     def __init__(self, file_name):
@@ -95,5 +95,14 @@ if __name__ == '__main__':
     g1 = create_ast_by_javalang(r"C:\Temp\commons-lang\src\main\java\org\apache\commons\lang3\math\Fraction.java")
     # g = Convert(r"C:\Users\User\Downloads\easy_srcml_visualization-master\easy_srcml_visualization-master\example\code2.srcml").to_nx()
     # nx.draw(g)
+    A = nx.to_scipy_sparse_matrix(g1)
+    X = [g1.nodes()[n]['type'] for n in g1.nodes()]
+    n_values = len(set(X))
+    X = np.eye(n_values)[X]
+
+    A = A.todense()
+    A[np.isnan(A)] = 0
+    X[np.isnan(X)] = 0
+
     pass
 
